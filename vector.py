@@ -12,9 +12,19 @@ class Vector2(object):
         return self.size * Vector2(math.cos(new_angle),
                                    math.sin(new_angle))
 
+    def dot(self, other):
+        if isinstance(other, Vector2):
+            return self.x * other.x + self.y * other.y
+        else:
+            raise TypeError("can only dot two vectors together")
+
     @property
     def size(self):
         return math.sqrt(self.x ** 2 + self.y ** 2)
+
+    @property
+    def size_squared(self):
+        return self.x ** 2 + self.y ** 2
 
     @size.setter
     def size(self, value):
@@ -56,6 +66,20 @@ class Vector2(object):
 
     def __rmul__(self, other):
         return self * other
+
+    def __len__(self):
+        return 2
+
+    def __getitem__(self, index):
+        if index == 0:
+            return self.x
+        elif index == 1:
+            return self.y
+        raise IndexError("index out of range")
+
+    def __eq__(self, other):
+        aeq = lambda x, y: abs(x - y) < 10 ** -5
+        return aeq(self.x, other.x) and aeq(self.y, other.y)
 
     def __repr__(self):
         return 'Vector2(%.3f,%.3f)' % (self.x, self.y)

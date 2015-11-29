@@ -15,3 +15,11 @@ class Camera(object):
 
     def move(self, vel):
         self.pos += vel
+
+    @property
+    def center(self):
+        return self.pos + Vector2(self.width // 2, self.height // 2)
+
+    @center.setter
+    def center(self, value):
+        self.pos = value - Vector2(self.width // 2, self.height // 2)
