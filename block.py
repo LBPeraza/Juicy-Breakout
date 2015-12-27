@@ -3,6 +3,7 @@ import pygame
 from game_object import GameObject
 from vector import Vector2
 from random import randrange
+from constants import *
 
 
 class Block(GameObject):
@@ -16,7 +17,10 @@ class Block(GameObject):
 
     def __init__(self, camera, pos):
         image = pygame.Surface((Block.width, Block.height), pygame.SRCALPHA)
-        self.color = Block.color()
+        if JUICE[0]:
+            self.color = Block.color()
+        else:
+            self.color = (255, 255, 255, 255)
         image.fill(self.color)
         super().__init__(camera, pos, image)
 
@@ -31,6 +35,13 @@ class Block(GameObject):
                 return Vector2(0, 1 if ball.pos.y > self.pos.y else -1)
             else:
                 return Vector2(-1, 0)
+
+    def recolor(self, color=None):
+        if color:
+            self.color = color
+        else:
+            self.color = Block.color()
+        self.base_image.fill(self.color)
 
 
 class DeadBlock(GameObject):

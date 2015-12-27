@@ -2,6 +2,7 @@
 import pygame
 from game_object import GameObject
 from vector import Vector2
+from constants import *
 
 
 class Paddle(GameObject):
@@ -33,4 +34,5 @@ class Paddle(GameObject):
         pos = self.camera.screen_to_world(mouse_pos)
         self.velocity.x = Paddle.clamp_speed((pos.x - self.pos.x)) / 1.1
         super().update()
-        self.update_image()
+        if JUICE[0]:
+            self.update_image()

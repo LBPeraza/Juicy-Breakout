@@ -6,12 +6,13 @@ from paddle import Paddle
 from block import Block, DeadBlock
 from ball import Ball
 from camera import Camera
+from constants import *
 import random
 
 
 class Game(PygameGame):
     def random_blocks(self, max_y, count=20, stop=5):
-        from random import randint
+        randint = random.randint
         blocks = pygame.sprite.Group()
         x = lambda: randint(Block.width // 2, self.width - Block.width // 2)
         y = lambda: randint(Block.height // 2, max_y - Block.height // 2)
@@ -43,8 +44,7 @@ class Game(PygameGame):
     def init(self):
         self.camera = Camera(self.width, self.height,
                              Vector2(self.width // 2, self.height // 2))
-        self.blocks = self.structured_blocks(5, 9)
-        # self.blocks = self.random_blocks(self.height // 2, 40, 10)
+        self.blocks = self.structured_blocks(5, 5)
         self.dead_blocks = pygame.sprite.Group()
         self.bg_color = (0, 0, 0)
         self.paddle = pygame.sprite.GroupSingle(
@@ -56,9 +56,10 @@ class Game(PygameGame):
         self.track_paddle = self.paddle.sprite
         self.ball.sprite.track_to_paddle(self.track_paddle)
         self.camera_v = Vector2(0, 0)
+        self.inverted = False
 
     def mousePressed(self, x, y):
-        block = Block(Vector2(x, y))
+        block = Block(self.camera, Vector2(x, y))
         collide = pygame.sprite.spritecollideany(block, self.blocks)
         if collide:
             self.kill_block(collide)
@@ -66,7 +67,8 @@ class Game(PygameGame):
             self.blocks.add(block)
 
     def kill_block(self, block, velocity=None):
-        self.dead_blocks.add(DeadBlock(self.camera, block, velocity))
+        if JUICE[0]:
+            self.dead_blocks.add(DeadBlock(self.camera, block, velocity))
         block.kill()
 
     def mouseMotion(self, x, y):
@@ -74,22 +76,28 @@ class Game(PygameGame):
 
     def keyPressed(self, key, mod):
         if key == pygame.K_SPACE and self.track_paddle:
-            vx = 2 * self.track_paddle.velocity.x / Paddle.max_speed
-            velocity = Vector2(vx, 0) + self.track_paddle.normal
+            # vx = 2 * self.track_paddle.velocity.x / Paddle.max_speed
+            velocity = self.track_paddle.normal
             self.ball.sprite.launch(velocity * Ball.start_speed)
             self.track_paddle = None
-        elif key == ord('r'):
+        elif key == pygame.K_r:
             self.init()
+        elif key == pygame.K_j:
+            JUICE[0] = not JUICE[0]
+            for block in self.blocks:
+                block.recolor(None if JUICE[0] else (255, 255, 255, 255))
 
     def ball_block_collide(self):
         collide = pygame.sprite.spritecollideany(self.ball.sprite, self.blocks)
         rand = lambda: ((lambda x: x if random.randint(0, 1) else -x)
                         (random.randint(5, 10)))
         if collide:
-            self.camera.move(Vector2(rand(), rand()))
             side = collide.get_side(self.ball.sprite)
             self.kill_block(collide, self.ball.sprite.velocity)
             self.ball.sprite.bounce(side)
+            if JUICE[0]:
+                self.camera.move(Vector2(rand(), rand()))
+                self.inverted = True
 
     def ball_paddle_collide(self):
         collide = pygame.sprite.spritecollideany(self.ball.sprite, self.paddle)
@@ -97,8 +105,7 @@ class Game(PygameGame):
             diff = self.ball.sprite.pos - self.paddle.sprite.pos
             diff.x /= 3
             diff.x += random.randint(-1, 1)
-            direction = diff - self.ball.sprite.velocity
-            self.ball.sprite.launch(direction.normalized() * Ball.start_speed)
+            self.ball.sprite.launch(diff.normalized() * Ball.start_speed)
 
     def update_camera_vel(self):
         want = Vector2(self.width // 2, self.height // 2)
@@ -106,8 +113,8 @@ class Game(PygameGame):
         self.camera_v += 0.8 * (want - self.camera.center)
 
     def timerFired(self, dt):
-        if self.mouse_pos:
-            self.paddle.update(self.mouse_pos)
+        mouse_pos = pygame.mouse.get_pos()
+        self.paddle.update(Vector2(*mouse_pos))
         self.blocks.update()
         self.dead_blocks.update(self.height)
         self.ball_block_collide()
@@ -122,6 +129,13 @@ class Game(PygameGame):
         self.blocks.draw(screen)
         self.dead_blocks.draw(screen)
         self.ball.draw(screen)
+        if self.inverted:
+            inv = pygame.Surface((self.width, self.height))
+            inv.fill((255, 255, 255))
+            rect = (0, 0, self.width, self.height)
+            inv.blit(screen, rect, None, pygame.BLEND_RGB_SUB)
+            screen.blit(inv, rect)
+            self.inverted = False
 
 
 Game().run()

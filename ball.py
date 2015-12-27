@@ -28,16 +28,16 @@ class Ball(GameObject):
         if track_paddle:
             self.track_to_paddle(track_paddle)
         else:
-            if self.rect.left < left or self.rect.right > right:
+            if self.rect.left < left:
                 self.velocity.x *= -1
-            if self.rect.top < top or self.rect.bottom > bottom:
+                self.pos.x = left + self.rect.width // 2
+            elif self.rect.right > right:
+                self.velocity.x *= -1
+                self.pos.x = right - self.rect.width // 2
+            if self.rect.top < top:
                 self.velocity.y *= -1
+                self.pos.y = top + self.rect.height // 2
+            elif self.rect.bottom > bottom:
+                self.velocity.y *= -1
+                self.pos.y = bottom - self.rect.height // 2
         super().update()
-
-if __name__ == '__main__':
-    from vector import Vector2 as V
-    Ball.__str__ = lambda s: ("Velocity: %s" % s.velocity)
-    a = Ball(V(0, 0))
-    a.launch(V(1, 1))
-    a.bounce(V(0, -1))
-    assert(a.velocity == V(1, -1))
